@@ -5,7 +5,7 @@ import { Collection } from "./collection"
 
 export { Query } from './database/query'
 export { Collection } from './collection'
-export { Document as DocumentReference } from './document'
+export { Document } from './document'
 
 /**
  * 数据库模块
