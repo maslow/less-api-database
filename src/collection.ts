@@ -1,7 +1,7 @@
 import { Database } from './index'
 import { Document } from './document'
 import { CollectionReference } from "./database/collection"
-import Aggregation from './database/aggregate'
+import { throwNotSupportErrorFunc } from "./util"
 
 /**
  * 集合模块
@@ -20,8 +20,11 @@ export class Collection extends CollectionReference {
   /* eslint-disable no-useless-constructor */
   constructor(db: Database, coll: string) {
     super(db, coll)
-  }
 
+    this.watch = throwNotSupportErrorFunc('Collection::watch()')
+    this.aggregate = throwNotSupportErrorFunc('Collection::aggregate()')
+    
+  }
 
   /**
    * 获取文档的引用
@@ -45,7 +48,4 @@ export class Collection extends CollectionReference {
     return docRef.create(data, callback)
   }
 
-  aggregate() {
-    return new Aggregation(this._db, this._coll)
-  }
 }
