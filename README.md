@@ -1,2 +1,3 @@
-# cloud-database
-Database interface for cloud development 
+# less-api database
+
+Database interface for [less-api](https://github.com/Maslow/less-api)
