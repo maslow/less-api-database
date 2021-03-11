@@ -6,7 +6,7 @@
  * Database Watch
  */
 
-export type DataType = 'init' | 'update' | 'add' | 'remove' | 'replace'
+export type DataType = 'init' | 'update' | 'add' | 'remove' | 'replace' | 'limit'
 export type QueueType = 'init' | 'enqueue' | 'dequeue' | 'update'
 
 // TODO:
@@ -19,8 +19,7 @@ export interface IAppConfig {
   docSizeLimit: number
   realtimePingInterval: number
   realtimePongWaitTimeout: number
-  // accessToken: any
-  getAccessToken: Function
+  request: any
 }
 
 export interface IWatchOptions {

@@ -1,14 +1,14 @@
-import { Database } from './index'
-import { Document } from './document'
-import { CollectionReference } from "./database/collection"
-import { throwNotSupportErrorFunc } from "./util"
+import { Db } from './index'
+import { DocumentReference } from './document'
+import { Query } from './query'
+// import Aggregation from './aggregate'
 
 /**
- * 集合模块
+ * 集合模块，继承 Query 模块
  *
- * @author maslow
+ * @author haroldhu
  */
-export class Collection extends CollectionReference {
+export class CollectionReference extends Query {
   /**
    * 初始化
    *
@@ -18,12 +18,15 @@ export class Collection extends CollectionReference {
    * @param coll  - 集合名称
    */
   /* eslint-disable no-useless-constructor */
-  constructor(db: Database, coll: string) {
+  constructor(db: Db, coll: string) {
     super(db, coll)
+  }
 
-    this.watch = throwNotSupportErrorFunc('Collection::watch()')
-    this.aggregate = throwNotSupportErrorFunc('Collection::aggregate()')
-    
+  /**
+   * 读取集合名字
+   */
+  get name() {
+    return this._coll
   }
 
   /**
@@ -31,11 +34,11 @@ export class Collection extends CollectionReference {
    *
    * @param docID - 文档ID
    */
-  doc(docID?: string | number): Document {
+  doc(docID?: string | number): DocumentReference {
     if (typeof docID !== 'string' && typeof docID !== 'number') {
       throw new Error('docId必须为字符串或数字')
     }
-    return new Document(this._db, this._coll, docID)
+    return new DocumentReference(this._db, this._coll, docID)
   }
 
   /**
@@ -43,9 +46,12 @@ export class Collection extends CollectionReference {
    *
    * @param data - 数据
    */
-  add(data: Object, callback?: any): Promise<any> {
-    let docRef = new Document(this._db, this._coll, undefined)
-    return docRef.create(data, callback)
+  add(data: Object, options?: { multi: boolean }, callback?: any): Promise<{ id: string | number, insertedCount: number, requestId: string }>{
+    let docRef = new DocumentReference(this._db, this._coll, undefined)
+    return docRef.create(data, options, callback)
   }
 
+  // aggregate() {
+  //   return new Aggregation(this._db, this._coll)
+  // }
 }

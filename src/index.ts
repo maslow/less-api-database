@@ -1,36 +1,88 @@
+// import { Point } from './geo/point'
+// import * as Geo from './geo/index'
+import { CollectionReference } from './collection'
+import { Command } from './command'
+// import { ServerDateConstructor } from './serverDate/index'
+// import { RegExpConstructor } from './regexp/index'
 
-import { Db } from './database'
-import { throwNotSupportErrorFunc } from "./util"
-import { Collection } from "./collection"
+/**
+ * 地理位置类型
+//  */
+// interface GeoTeyp {
+//   Point: typeof Point
+// }
 
-export { Query } from './database/query'
-export { Collection } from './collection'
-export { Document } from './document'
+export { Query } from './query'
+export { CollectionReference } from './collection'
+export { DocumentReference } from './document'
 
 /**
  * 数据库模块
  *
- * @author maslow
+ * @author haroldhu
  */
-export class Database extends Db {
+export class Db {
+  /**
+   * Geo 类型
+   */
+  // Geo: GeoTeyp
+
+  /**
+   * 逻辑操作的命令
+   */
+  command: typeof Command
+
+  // RegExp: any
+
+  // serverDate: any
+
+  /**
+   * 初始化
+   *
+   * 默认是 `default` 数据库，为今后扩展使用
+   *
+   * @param config
+   */
+  config: any
+
+  // 惯例通用 primaryKey， mongo: _id, mysql: id
+  get primaryKey(): string {
+    return this.config?.primaryKey || '_id'
+  }
+
+  static reqClass: any
+
+  static getAccessToken: Function
 
   constructor(config?: any) {
-    super(config)
-    this.startTransaction = throwNotSupportErrorFunc('startTransaction()')
-    this.runTransaction = throwNotSupportErrorFunc('runTransaction()')
-    this.createCollection = throwNotSupportErrorFunc('createCollection()')
+    this.config = config
+    // this.Geo = Geo
+    // this.serverDate = ServerDateConstructor
+    this.command = Command
   }
 
   /**
    * 获取集合的引用
    *
    * @param collName - 集合名称
-   * @override
    */
-  collection(collName: string): Collection {
+  collection(collName: string): CollectionReference {
     if (!collName) {
       throw new Error('Collection name is required')
     }
-    return new Collection(this, collName)
+    return new CollectionReference(this, collName)
+  }
+
+  /**
+   * 创建集合
+   */
+  createCollection(collName: string) {
+    let request = new Db.reqClass(this.config)
+
+    const params = {
+      collectionName: collName
+    }
+
+    return request.send('database.addCollection', params)
   }
 }

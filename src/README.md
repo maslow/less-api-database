@@ -71,5 +71,3 @@ tnpm run tstest
 
 - 创建时间是一个时间对象
 - 更新时间时一个时间对象的数组
-
-from @cloudbase/database v0.9.10

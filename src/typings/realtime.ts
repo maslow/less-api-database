@@ -49,15 +49,23 @@ export interface IRequestMessageLoginData {
   dataVersion: string
 }
 
+export interface IRequestExtraMessageLoginData {
+  runtime: string
+  signStr: string
+  secretVersion: string
+}
 export interface IRequestMessageLoginMsg extends IRequestMessageBase<false> {
   msgType: 'LOGIN'
   msgData: IRequestMessageLoginData
+  exMsgData?: IRequestExtraMessageLoginData
 }
 
 export interface IRequestMessageInitWatchData {
   envId: string
   collName: string // collection name
   query: string // query that is stringified
+  limit?: number
+  orderBy?: Record<string, string>
 }
 
 export interface IRequestMessageInitWatchMsg extends IRequestMessageBase {
@@ -229,6 +237,7 @@ export type IDBNextEvent =
   | IDBNextEventDataReplace
   | IDBNextEventDataAdd
   | IDBNextEventDataRemove
+  | IDBNextEventDataLimit
 
 export type IDBNextEventDataUpdate =
   | IDBNextEventDataUpdateQueueUpdate
@@ -239,6 +248,10 @@ export type IDBNextEventDataReplace =
   | IDBNextEventDataReplaceQueueUpdate
   | IDBNextEventDataReplaceQueueEnqueue
   | IDBNextEventDataReplaceQueueDequeue
+
+export type IDBNextEventDataLimit = 
+  | IDBNextEventDataLimitQueueEnqueue
+  | IDBNextEventDataLimitQueueDequeue
 
 export interface IDBNextEventDataUpdateQueueUpdate extends IDBEventBase {
   DataType: 'update'
@@ -297,4 +310,20 @@ export interface IDBNextEventDataRemove extends IDBEventBase {
   DataType: 'remove'
   QueueType: 'dequeue'
   Doc: ''
+}
+
+export interface IDBNextEventDataLimitQueueEnqueue extends IDBEventBase {
+  DataType: 'limit'
+  QueueType: 'enqueue'
+  Doc: string
+  UpdatedFields: ''
+  RemovedFields: ''
+}
+
+export interface IDBNextEventDataLimitQueueDequeue extends IDBEventBase {
+  DataType: 'limit'
+  QueueType: 'dequeue'
+  Doc: ''
+  UpdatedFields: ''
+  RemovedFields: ''
 }

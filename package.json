@@ -1,6 +1,6 @@
 {
   "name": "less-api-database",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Database interface for cloud development",
   "main": "dist/commonjs/index.js",
   "module": "dist/esm/index.js",
@@ -36,7 +36,6 @@
     "typescript-eslint-parser": "^22.0.0"
   },
   "dependencies": {
-    "@cloudbase/database": "^0.9.10",
     "bson": "^4.0.2",
     "lodash.clonedeep": "4.5.0",
     "lodash.set": "4.3.2",
