@@ -7,6 +7,7 @@ import { QuerySerializer } from './serializer/query'
 import { UpdateSerializer } from './serializer/update'
 import { ErrorCode } from './constant'
 
+
 interface GetRes {
   data: any[]
   requestId: string
@@ -26,6 +27,12 @@ interface UpdateRes {
 
 interface RemoveRes {
   deleted: number,
+  requestId: string,
+  ok: boolean
+}
+
+interface CountRes {
+  total: number,
   requestId: string,
   ok: boolean
 }
@@ -60,8 +67,15 @@ enum JoinType {
 interface JoinParam {
   collection: string,
   type: JoinType,
-  leftKey: string,
-  rightKey: string
+  leftKey: string,    // 左表连接键
+  rightKey: string    // 右表连接键
+}
+
+interface WithParam {
+  query: Query,     // 子查询
+  from?: string,    // 主表连接键
+  to: string,       // 子表连接键
+  as?: string       // 结果集字段重命名，缺省则用子表名
 }
 
 
@@ -114,6 +128,13 @@ export class Query {
   private _joins: JoinParam[]
 
   /**
+   * 子表查询（一对多）
+   * 
+   * @internal
+   */
+  private _withs: WithParam[]
+
+  /**
    * 原始过滤参数
    */
   // private _rawWhereParams: Object
@@ -142,7 +163,8 @@ export class Query {
     fieldFilters?: Object,
     fieldOrders?: QueryOrder[],
     queryOptions?: QueryOption,
-    joins?: JoinParam[]
+    joins?: JoinParam[],
+    withs?: WithParam[]
     // rawWhereParams?: Object
   ) {
     this._db = db
@@ -151,6 +173,7 @@ export class Query {
     this._fieldOrders = fieldOrders || []
     this._queryOptions = queryOptions || {}
     this._joins = joins || []
+    this._withs = withs || []
     /* eslint-disable new-cap */
     this._request = new Db.reqClass(this._db.config)
   }
@@ -182,7 +205,8 @@ export class Query {
       QuerySerializer.encode(query),
       this._fieldOrders,
       this._queryOptions,
-      this._joins
+      this._joins,
+      this._withs
     )
   }
 
@@ -202,7 +226,15 @@ export class Query {
     }
     const combinedOrders = this._fieldOrders.concat(newOrder)
 
-    return new Query(this._db, this._coll, this._fieldFilters, combinedOrders, this._queryOptions, this._joins)
+    return new Query(
+      this._db,
+      this._coll,
+      this._fieldFilters,
+      combinedOrders,
+      this._queryOptions,
+      this._joins,
+      this._withs
+    )
   }
 
   /**
@@ -221,7 +253,15 @@ export class Query {
     }
 
     const combinedJoins = this._joins.concat(newJoin)
-    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, this._queryOptions, combinedJoins)
+    return new Query(
+      this._db,
+      this._coll,
+      this._fieldFilters,
+      this._fieldOrders,
+      this._queryOptions,
+      combinedJoins,
+      this._withs
+    )
   }
 
   /**
@@ -230,7 +270,7 @@ export class Query {
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
    */
-  public leftJoin(collection: string, rightKey: string, leftKey: string) {
+  public leftJoin(collection: string, rightKey: string, leftKey: string): Query {
     return this.join(collection, rightKey, leftKey, JoinType.LEFT)
   }
 
@@ -240,7 +280,7 @@ export class Query {
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
    */
-  public rightJoin(collection: string, rightKey: string, leftKey: string) {
+  public rightJoin(collection: string, rightKey: string, leftKey: string): Query {
     return this.join(collection, rightKey, leftKey, JoinType.RIGHT)
   }
 
@@ -250,7 +290,7 @@ export class Query {
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
    */
-  public fullJoin(collection: string, rightKey: string, leftKey: string) {
+  public fullJoin(collection: string, rightKey: string, leftKey: string): Query {
     return this.join(collection, rightKey, leftKey, JoinType.FULL)
   }
 
@@ -262,6 +302,23 @@ export class Query {
    */
   public innerJoin(collection: string, rightKey: string, leftKey: string) {
     return this.join(collection, rightKey, leftKey, JoinType.INNER)
+  }
+
+  /**
+   * 添加 一对多 子查询条件
+   * @param param {WithParam}
+   * @returns Query
+   */
+  public with(param: WithParam): Query {
+    const newWith: WithParam = {
+      query: param.query,
+      to: param.to,
+      from: param.from ?? 'id',
+      as: param.as ?? param.query._coll
+    }
+
+    const combinedWiths = this._withs.concat(newWith)
+    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, this._queryOptions, this._joins, combinedWiths)
   }
 
   /**
@@ -292,7 +349,7 @@ export class Query {
     let option = { ...this._queryOptions }
     option.projection = projection
 
-    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins)
+    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins, this._withs)
   }
 
   /**
@@ -306,7 +363,7 @@ export class Query {
     let option = { ...this._queryOptions }
     option.limit = limit
 
-    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins)
+    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins, this._withs)
   }
 
   /**
@@ -320,7 +377,7 @@ export class Query {
     let option = { ...this._queryOptions }
     option.offset = offset
 
-    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins)
+    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins, this._withs)
   }
 
   /**
@@ -403,9 +460,61 @@ export class Query {
   }
 
   /**
+   * 发起请求获取文档列表，当使用 with 条件时使用
+   * 
+   * 1. 调用 get() 执行主查询
+   * 2. 结合主查询的结果，使用 in 执行子表查询
+   * 3. 合并主表 & 子表的结果，即聚合
+   */
+  public async merge(options?: { nested: boolean }): Promise<GetRes & ErrorRes> {
+
+    // 调用 get() 执行主查询
+    const res = await this.get(options)
+    if (!res.ok) {
+      return res
+    }
+
+    // 针对每一个 WithJoin 做合并处理
+    for (let _with of this._withs) {
+      const { query, from, to, as } = _with
+      const fromVals = res.data.map(item => item[from])
+
+      // 执行子查询
+      if (!query._fieldFilters) {
+        query._fieldFilters = {}
+      }
+      query._fieldFilters[to] = { '$in': fromVals }
+      const r_sub = await query.get()
+      if (!r_sub.ok) {
+        return r_sub
+      }
+
+      // 按照 from -> to 的连接关系将子查询结果聚合
+      // 构建 { [value of `to`]: [subQueryData] } 映射表
+      const _map = {}
+      for (let sub of r_sub.data) {
+        const key = sub[to]           // 将子表结果的连接键的值做为映射表的 key
+        _map[key] = _map[key] || []
+        _map[key].push(sub)           // 将子表结果放入映射表
+      }
+
+      // 将聚合结果合并入主表结果集中
+      for (let m of res.data) {
+        // 此处主表结果中的 [value of `from`] 与 上面子表结果中的 [value of `to`] 应该是一致的
+        const key = m[from]
+        m[as] = _map[key]
+      }
+    }
+
+    return res
+  }
+
+
+
+  /**
    * 获取总数
    */
-  public count(callback?: any): Promise<{ total: number, requestId: string, ok: boolean } & ErrorRes> {
+  public count(callback?: any): Promise<CountRes & ErrorRes> {
     callback = callback || createPromiseCallback()
 
     interface Param {
