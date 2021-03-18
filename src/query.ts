@@ -75,7 +75,8 @@ interface WithParam {
   query: Query,     // 子查询
   from?: string,    // 主表连接键
   to: string,       // 子表连接键
-  as?: string       // 结果集字段重命名，缺省则用子表名
+  as?: string,      // 结果集字段重命名，缺省则用子表名
+  one?: boolean,    // 是否是一对一查询，只在 Query.withOne() 中使用
 }
 
 
@@ -238,7 +239,7 @@ export class Query {
   }
 
   /**
-   * 添加联表条件
+   * 添加联表条件，实联接，即数据库支持的联表操作（仅 SQL 数据库支持）
    * @param type 联接类型, 以下值之一 "left", "inner", "right", "full"
    * @param collection 联接的子表名
    * @param rightKey 子表的联接键名
@@ -265,7 +266,7 @@ export class Query {
   }
 
   /**
-   * 添加 left join 联表条件
+   * 添加 left join 联表条件，实联接，即数据库支持的联表操作（仅 SQL 数据库支持）
    * @param collection 联接的子表名
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
@@ -275,7 +276,7 @@ export class Query {
   }
 
   /**
-   * 添加 right join 联表条件
+   * 添加 right join 联表条件，实联接，即数据库支持的联表操作（仅 SQL 数据库支持）
    * @param collection 联接的子表名
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
@@ -285,7 +286,7 @@ export class Query {
   }
 
   /**
-   * 添加 full join 联表条件
+   * 添加 full join 联表条件，实联接，即数据库支持的联表操作（仅 SQL 数据库支持）
    * @param collection 联接的子表名
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
@@ -295,7 +296,7 @@ export class Query {
   }
 
   /**
-   * 添加 inner join 联表条件
+   * 添加 inner join 联表条件，实联接，即数据库支持的联表操作（仅 SQL 数据库支持）
    * @param collection 联接的子表名
    * @param rightKey 子表的联接键名
    * @param leftKey 主表的联接键名
@@ -305,7 +306,7 @@ export class Query {
   }
 
   /**
-   * 添加 一对多 子查询条件
+   * 添加 一对多 子查询条件，需要使用 merge() 代替 get() 发起数据请求
    * @param param {WithParam}
    * @returns Query
    */
@@ -313,8 +314,27 @@ export class Query {
     const newWith: WithParam = {
       query: param.query,
       to: param.to,
-      from: param.from ?? 'id',
-      as: param.as ?? param.query._coll
+      from: param.from ?? this._db.primaryKey,
+      as: param.as ?? param.query._coll,
+      one: false
+    }
+
+    const combinedWiths = this._withs.concat(newWith)
+    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, this._queryOptions, this._joins, combinedWiths)
+  }
+
+  /**
+   * 添加 一对一 子查询条件，需要使用 merge() 代替 get() 发起数据请求
+   * @param param {WithParam}
+   * @returns Query
+   */
+  public withOne(param: WithParam): Query {
+    const newWith: WithParam = {
+      query: param.query,
+      to: param.to,
+      from: param.from ?? this._db.primaryKey,
+      as: param.as ?? param.query._coll,
+      one: true
     }
 
     const combinedWiths = this._withs.concat(newWith)
@@ -476,26 +496,45 @@ export class Query {
 
     // 针对每一个 WithJoin 做合并处理
     for (let _with of this._withs) {
-      const { query, from, to, as } = _with
+      const { query, from, to, as, one } = _with
       const fromVals = res.data.map(item => item[from])
 
-      // 执行子查询
-      if (!query._fieldFilters) {
-        query._fieldFilters = {}
+      let _query = query
+
+      // for withOne()
+      if (one) {
+        _query.limit(1)
       }
-      query._fieldFilters[to] = { '$in': fromVals }
-      const r_sub = await query.get()
+
+      // 执行子查询
+      if (!_query._fieldFilters) {
+        _query._fieldFilters = {}
+      }
+      _query._fieldFilters[to] = { '$in': fromVals }
+
+      let r_sub: (GetRes & ErrorRes)
+      if (_query._withs.length) {
+        r_sub = await _query.merge()  // 如果子查询也使用了 with/withOne，则使用 merge() 查询
+      } else {
+        r_sub = await _query.get()
+      }
+
       if (!r_sub.ok) {
         return r_sub
       }
+
 
       // 按照 from -> to 的连接关系将子查询结果聚合
       // 构建 { [value of `to`]: [subQueryData] } 映射表
       const _map = {}
       for (let sub of r_sub.data) {
         const key = sub[to]           // 将子表结果的连接键的值做为映射表的 key
-        _map[key] = _map[key] || []
-        _map[key].push(sub)           // 将子表结果放入映射表
+        if (one) {
+          _map[key] = sub
+        } else {
+          _map[key] = _map[key] || []
+          _map[key].push(sub)           // 将子表结果放入映射表
+        }
       }
 
       // 将聚合结果合并入主表结果集中

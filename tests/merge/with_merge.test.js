@@ -16,15 +16,54 @@ const db = new Db({
 })
 
 
-describe('Db with & merge', async () => {
+describe('Db merge', async () => {
 
-  it('merge', async () => {
+  it('with & merge', async () => {
     const res = await db.collection('admin')
       .with({
         query: db.collection('user_role').leftJoin('role', 'id', 'role_id'),
         from: 'uid',
         to: 'uid',
         as: 'roles'
+      })
+      .merge()
+
+    for (let data of res.data) {
+      console.log(data)
+    }
+  })
+
+  it('withOne & merge', async () => {
+    const res = await db.collection('admin')
+      .withOne({
+        query: db.collection('user_role'),
+        from: 'uid',
+        to: 'uid',
+        as: 'role'
+      })
+      .merge()
+
+    for (let data of res.data) {
+      console.log(data)
+    }
+  })
+
+  it('withOne & merge (sub query withOne)', async () => {
+    const sub_query = db.collection('user_role')
+      .field(['uid', 'role_id'])
+      .withOne({
+        query: db.collection('role'),
+        from: 'role_id',
+        to: 'id',
+        as: 'info'
+      })
+
+    const res = await db.collection('admin')
+      .withOne({
+        query: sub_query,
+        from: 'uid',
+        to: 'uid',
+        as: 'role',
       })
       .merge()
 

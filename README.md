@@ -835,8 +835,10 @@ const { data } = await db.collection('article')
 // 结果如下：[ { article: {}, user: {} }, ... ]
 ```
 
-### 表查询（仅MySQL）
-> 主要用于「一对多」关系的子查询
+### With 子表查询（支持 MongoDb 和 MySQL）
+
+#### 一对多关系查询
+> 主要用于「一对多」关系的子查询，可跨库查询，要求用户拥有子表的查询权限
 
 ```js
 const { data } = await db.collection('article')
@@ -850,4 +852,22 @@ const { data } = await db.collection('article')
 
 console.log(data) 
 //  [ { id: 1, name: xxx, tags: [...] }  ]
+```
+
+#### 一对一关系查询
+> 类似 left join 查询，但此种方法支持 MongoDb 和 SQL
+
+
+```js
+const { data } = await db.collection('article')
+      .withOne({
+        query: db.collection('user'),
+        from: 'author_id',    // 主表连接键，即 article.id
+        to: 'id',             // 子表连接键，即 tag.article_id
+        as: 'author'          // 查询结果中字段重命名，缺省为子表名
+      })
+      .merge()
+
+console.log(data) 
+//  [ { id: 1, name: xxx, author: {...} }  ]
 ```
