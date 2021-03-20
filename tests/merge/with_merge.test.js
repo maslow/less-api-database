@@ -22,8 +22,8 @@ describe('Db merge', async () => {
     const res = await db.collection('admin')
       .with({
         query: db.collection('user_role').leftJoin('role', 'id', 'role_id'),
-        from: 'uid',
-        to: 'uid',
+        localField: 'uid',
+        foreignField: 'uid',
         as: 'roles'
       })
       .merge()
@@ -37,8 +37,8 @@ describe('Db merge', async () => {
     const res = await db.collection('admin')
       .withOne({
         query: db.collection('user_role'),
-        from: 'uid',
-        to: 'uid',
+        localField: 'uid',
+        foreignField: 'uid',
         as: 'role'
       })
       .merge()
@@ -53,16 +53,16 @@ describe('Db merge', async () => {
       .field(['uid', 'role_id'])
       .withOne({
         query: db.collection('role'),
-        from: 'role_id',
-        to: 'id',
+        localField: 'role_id',
+        foreignField: 'id',
         as: 'info'
       })
 
     const res = await db.collection('admin')
       .withOne({
         query: sub_query,
-        from: 'uid',
-        to: 'uid',
+        localField: 'uid',
+        foreignField: 'uid',
         as: 'role',
       })
       .merge()

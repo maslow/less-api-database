@@ -72,9 +72,9 @@ interface JoinParam {
 }
 
 interface WithParam {
-  query: Query,     // 子查询
-  from?: string,    // 主表连接键
-  to: string,       // 子表连接键
+  query: Query,           // 子查询
+  localField: string,     // 主表联接键（关联字段）
+  foreignField: string,   // 子表联接键（外键）
   as?: string,      // 结果集字段重命名，缺省则用子表名
   one?: boolean,    // 是否是一对一查询，只在 Query.withOne() 中使用
 }
@@ -313,8 +313,8 @@ export class Query {
   public with(param: WithParam): Query {
     const newWith: WithParam = {
       query: param.query,
-      to: param.to,
-      from: param.from ?? this._db.primaryKey,
+      foreignField: param.foreignField,
+      localField: param.localField,
       as: param.as ?? param.query._coll,
       one: false
     }
@@ -331,8 +331,8 @@ export class Query {
   public withOne(param: WithParam): Query {
     const newWith: WithParam = {
       query: param.query,
-      to: param.to,
-      from: param.from ?? this._db.primaryKey,
+      foreignField: param.foreignField,
+      localField: param.localField,
       as: param.as ?? param.query._coll,
       one: true
     }
@@ -398,6 +398,14 @@ export class Query {
     option.offset = offset
 
     return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, option, this._joins, this._withs)
+  }
+
+  /**
+   * 克隆
+   * @returns Query
+   */
+  public clone(): Query {
+    return new Query(this._db, this._coll, this._fieldFilters, this._fieldOrders, this._queryOptions, this._joins, this._withs)
   }
 
   /**
@@ -494,29 +502,30 @@ export class Query {
       return res
     }
 
-    // 针对每一个 WithJoin 做合并处理
+    // 针对每一个 WithParam 做合并处理
     for (let _with of this._withs) {
-      const { query, from, to, as, one } = _with
-      const fromVals = res.data.map(item => item[from])
+      const { query, localField, foreignField, as, one } = _with
+      const localValues = res.data.map(localData => localData[localField])
 
-      let _query = query
+      // 处理子查询
+      let q = query.clone()
 
       // for withOne()
       if (one) {
-        _query.limit(1)
+        q = q.limit(1)
       }
+
+      if (!q._fieldFilters) {
+        q._fieldFilters = {}
+      }
+      q._fieldFilters[foreignField] = { '$in': localValues }
 
       // 执行子查询
-      if (!_query._fieldFilters) {
-        _query._fieldFilters = {}
-      }
-      _query._fieldFilters[to] = { '$in': fromVals }
-
       let r_sub: (GetRes & ErrorRes)
-      if (_query._withs.length) {
-        r_sub = await _query.merge()  // 如果子查询也使用了 with/withOne，则使用 merge() 查询
+      if (q._withs.length) {
+        r_sub = await q.merge()  // 如果子查询也使用了 with/withOne，则使用 merge() 查询
       } else {
-        r_sub = await _query.get()
+        r_sub = await q.get()
       }
 
       if (!r_sub.ok) {
@@ -528,7 +537,7 @@ export class Query {
       // 构建 { [value of `to`]: [subQueryData] } 映射表
       const _map = {}
       for (let sub of r_sub.data) {
-        const key = sub[to]           // 将子表结果的连接键的值做为映射表的 key
+        const key = sub[foreignField]           // 将子表结果的连接键的值做为映射表的 key
         if (one) {
           _map[key] = sub
         } else {
@@ -540,7 +549,7 @@ export class Query {
       // 将聚合结果合并入主表结果集中
       for (let m of res.data) {
         // 此处主表结果中的 [value of `from`] 与 上面子表结果中的 [value of `to`] 应该是一致的
-        const key = m[from]
+        const key = m[localField]
         m[as] = _map[key]
       }
     }
