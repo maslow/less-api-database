@@ -493,8 +493,12 @@ export class Query {
    * 1. 调用 get() 执行主查询
    * 2. 结合主查询的结果，使用 in 执行子表查询
    * 3. 合并主表 & 子表的结果，即聚合
+   * 4. intersection 可指定是否取两个结果集的交集，缺省则以主表结果为主
    */
-  public async merge(options?: { nested: boolean }): Promise<GetRes & ErrorRes> {
+  public async merge(options?: { nested: boolean, intersection: boolean }): Promise<GetRes & ErrorRes> {
+
+    options = options ?? {} as any
+    const intersection = options.intersection ?? false
 
     // 调用 get() 执行主查询
     const res = await this.get(options)
@@ -547,11 +551,20 @@ export class Query {
       }
 
       // 将聚合结果合并入主表结果集中
+      const results = []
       for (let m of res.data) {
         // 此处主表结果中的 [value of `from`] 与 上面子表结果中的 [value of `to`] 应该是一致的
         const key = m[localField]
         m[as] = _map[key]
+
+        // 如果取交集且子表结果无对应数据，则丢弃此条数据
+        if (intersection && !_map[key]) {
+          continue
+        }
+        results.push(m)
       }
+
+      res.data = results
     }
 
     return res
