@@ -1,6 +1,6 @@
 {
   "name": "less-api-database",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Database interface for cloud development",
   "main": "dist/commonjs/index.js",
   "module": "dist/esm/index.js",

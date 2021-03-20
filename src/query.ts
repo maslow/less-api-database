@@ -17,6 +17,12 @@ interface GetRes {
   ok: boolean
 }
 
+interface GetOneRes {
+  data: any
+  requestId: string
+  ok: boolean
+}
+
 interface UpdateRes {
   updated: number,
   matched: number,
@@ -414,7 +420,7 @@ export class Query {
    * - 默认获取集合下全部文档数据
    * - 可以把通过 `orderBy`、`where`、`skip`、`limit`设置的数据添加请求参数上
    */
-  public get(options?: { nested: boolean }, callback?: any): Promise<GetRes & ErrorRes> {
+  public get(options?: { nested?: boolean }, callback?: any): Promise<GetRes & ErrorRes> {
     /* eslint-disable no-param-reassign */
     callback = callback || createPromiseCallback()
 
@@ -485,6 +491,32 @@ export class Query {
       })
 
     return callback.promise
+  }
+
+  /**
+   * 发起请求获取一个文档
+   * @param options 
+   * @returns 
+   */
+  public async getOne(options?: { nested?: boolean }): Promise<GetOneRes & ErrorRes> {
+    const res = await this.get(options)
+    if (res.code) {
+      return res
+    }
+
+    if (!res.data.length) {
+      return {
+        ok: true,
+        data: null,
+        requestId: res.requestId
+      } as any
+    }
+
+    return {
+      ok: true,
+      data: res.data[0],
+      requestId: res.requestId
+    } as any
   }
 
   /**
