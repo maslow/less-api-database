@@ -1,16 +1,16 @@
-// import { Point } from './geo/point'
-// import * as Geo from './geo/index'
+import { Point } from './geo/point'
+import * as Geo from './geo/index'
 import { CollectionReference } from './collection'
 import { Command } from './command'
-// import { ServerDateConstructor } from './serverDate/index'
-// import { RegExpConstructor } from './regexp/index'
+import { ServerDateConstructor } from './serverDate/index'
+import { RegExpConstructor } from './regexp/index'
 
 /**
  * 地理位置类型
-//  */
-// interface GeoTeyp {
-//   Point: typeof Point
-// }
+*/
+interface GeoType {
+  Point: typeof Point
+}
 
 export { Query } from './query'
 export { CollectionReference } from './collection'
@@ -25,21 +25,19 @@ export class Db {
   /**
    * Geo 类型
    */
-  // Geo: GeoTeyp
+  Geo: GeoType
 
   /**
    * 逻辑操作的命令
    */
   command: typeof Command
 
-  // RegExp: any
+  RegExp: any
 
-  // serverDate: any
+  serverDate: any
 
   /**
    * 初始化
-   *
-   * 默认是 `default` 数据库，为今后扩展使用
    *
    * @param config
    */
@@ -56,8 +54,9 @@ export class Db {
 
   constructor(config?: any) {
     this.config = config
-    // this.Geo = Geo
-    // this.serverDate = ServerDateConstructor
+    this.Geo = Geo
+    this.RegExp = RegExpConstructor
+    this.serverDate = ServerDateConstructor
     this.command = Command
   }
 
