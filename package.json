@@ -4,6 +4,7 @@
   "description": "Database interface for cloud development",
   "main": "dist/commonjs/index.js",
   "module": "dist/esm/index.js",
+  "types": "types/index.d.ts",
   "scripts": {
     "test": "mocha tests/*test.js",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json",
