@@ -1,10 +1,4 @@
-interface GetRes {
-    data: any[];
-    requestId: string;
-    total: number;
-    limit: number;
-    offset: number;
-}
+import { GetRes } from './result-types';
 export declare class DocumentReference {
     readonly id: string | number;
     readonly projection: Object;
@@ -32,7 +26,6 @@ export declare class DocumentReference {
         deleted: number;
         requestId: string;
     }>;
-    get(callback?: any): Promise<GetRes>;
+    get<T>(callback?: any): Promise<GetRes<T>>;
     field(projection: Object): DocumentReference;
 }
-export {};

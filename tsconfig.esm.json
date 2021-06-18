@@ -10,7 +10,7 @@
     "emitDecoratorMetadata": true,
     "importHelpers": false,
     "module": "es6",
-    // "declarationDir": "types",
+    "declarationDir": "types",
     "noEmitOnError": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,

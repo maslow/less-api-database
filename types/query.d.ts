@@ -1,38 +1,5 @@
 import { OrderByDirection } from './constant';
-interface GetRes {
-    data: any[];
-    requestId: string;
-    total?: number;
-    limit?: number;
-    offset?: number;
-    ok: boolean;
-}
-interface GetOneRes {
-    data: any;
-    requestId: string;
-    ok: boolean;
-}
-interface UpdateRes {
-    updated: number;
-    matched: number;
-    upsertedId: number;
-    requestId: string;
-    ok: boolean;
-}
-interface RemoveRes {
-    deleted: number;
-    requestId: string;
-    ok: boolean;
-}
-interface CountRes {
-    total: number;
-    requestId: string;
-    ok: boolean;
-}
-interface ErrorRes {
-    code: string | number;
-    error: string;
-}
+import { GetOneRes, GetRes, ErrorRes, CountRes, UpdateRes, RemoveRes } from './result-types';
 declare enum JoinType {
     INNER = "inner",
     LEFT = "left",
@@ -60,16 +27,16 @@ export declare class Query {
     limit(limit: number): Query;
     skip(offset: number): Query;
     clone(): Query;
-    get(options?: {
+    get<T>(options?: {
         nested?: boolean;
-    }, callback?: any): Promise<GetRes & ErrorRes>;
+    }, callback?: any): Promise<GetRes<T> & ErrorRes>;
     getOne(options?: {
         nested?: boolean;
     }): Promise<GetOneRes & ErrorRes>;
-    merge(options?: {
+    merge<T>(options?: {
         nested?: boolean;
         intersection?: boolean;
-    }): Promise<GetRes & ErrorRes>;
+    }): Promise<GetRes<T> & ErrorRes>;
     count(callback?: any): Promise<CountRes & ErrorRes>;
     update(data: Object, options?: {
         multi: boolean;

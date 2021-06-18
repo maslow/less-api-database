@@ -6,47 +6,9 @@ import { Util } from './util'
 import { QuerySerializer } from './serializer/query'
 import { UpdateSerializer } from './serializer/update'
 import { ErrorCode } from './constant'
+import { GetOneRes, GetRes, ErrorRes, CountRes, UpdateRes, RemoveRes } from './result-types'
 
 
-interface GetRes {
-  data: any[]
-  requestId: string
-  total?: number
-  limit?: number
-  offset?: number,
-  ok: boolean
-}
-
-interface GetOneRes {
-  data: any
-  requestId: string
-  ok: boolean
-}
-
-interface UpdateRes {
-  updated: number,
-  matched: number,
-  upsertedId: number,
-  requestId: string,
-  ok: boolean
-}
-
-interface RemoveRes {
-  deleted: number,
-  requestId: string,
-  ok: boolean
-}
-
-interface CountRes {
-  total: number,
-  requestId: string,
-  ok: boolean
-}
-
-interface ErrorRes {
-  code: string | number,
-  error: string
-}
 
 interface QueryOrder {
   field?: string
@@ -420,7 +382,7 @@ export class Query {
    * - 默认获取集合下全部文档数据
    * - 可以把通过 `orderBy`、`where`、`skip`、`limit`设置的数据添加请求参数上
    */
-  public get(options?: { nested?: boolean }, callback?: any): Promise<GetRes & ErrorRes> {
+  public get<T>(options?: { nested?: boolean }, callback?: any): Promise<GetRes<T> & ErrorRes> {
     /* eslint-disable no-param-reassign */
     callback = callback || createPromiseCallback()
 
@@ -527,7 +489,7 @@ export class Query {
    * 3. 合并主表 & 子表的结果，即聚合
    * 4. intersection 可指定是否取两个结果集的交集，缺省则以主表结果为主
    */
-  public async merge(options?: { nested?: boolean, intersection?: boolean }): Promise<GetRes & ErrorRes> {
+  public async merge<T>(options?: { nested?: boolean, intersection?: boolean }): Promise<GetRes<T> & ErrorRes> {
 
     options = options ?? {} as any
     const intersection = options.intersection ?? false
@@ -535,7 +497,7 @@ export class Query {
     // 调用 get() 执行主查询
     const res = await this.get(options as any)
     if (!res.ok) {
-      return res
+      return res as any
     }
 
     // 针对每一个 WithParam 做合并处理
@@ -557,7 +519,7 @@ export class Query {
       q._fieldFilters[foreignField] = { '$in': localValues }
 
       // 执行子查询
-      let r_sub: (GetRes & ErrorRes)
+      let r_sub: (GetRes<T> & ErrorRes)
       if (q._withs.length) {
         r_sub = await q.merge()  // 如果子查询也使用了 with/withOne，则使用 merge() 查询
       } else {
@@ -599,7 +561,7 @@ export class Query {
       res.data = results
     }
 
-    return res
+    return res as any
   }
 
 

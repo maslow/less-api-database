@@ -5,14 +5,8 @@ import { UpdateSerializer } from './serializer/update'
 import { serialize } from './serializer/datatype'
 import { UpdateCommand } from './commands/update'
 import { QueryType } from './constant'
+import { GetRes } from './result-types'
 
-interface GetRes {
-  data: any[]
-  requestId: string
-  total: number
-  limit: number
-  offset: number
-}
 
 /**
  * 文档模块
@@ -302,7 +296,7 @@ export class DocumentReference {
   /**
    * 返回选中的文档
    */
-  get(callback?: any): Promise<GetRes> {
+  get<T>(callback?: any): Promise<GetRes<T>> {
     callback = callback || createPromiseCallback()
 
     const query = { [this.primaryKey]: this.id }

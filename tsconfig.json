@@ -11,7 +11,7 @@
     "emitDecoratorMetadata": true,
     "importHelpers": false,
     "module": "commonjs",
-    "declarationDir": "types",
+    // "declarationDir": "types",
     "noEmitOnError": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
