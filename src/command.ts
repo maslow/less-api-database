@@ -1,4 +1,4 @@
-import { QueryCommand, QUERY_COMMANDS_LITERAL } from './commands/query'
+import { IGeoIntersectsOptions, IGeoNearOptions, IGeoWithinOptions, QueryCommand, QUERY_COMMANDS_LITERAL } from './commands/query'
 import { LogicCommand, LOGIC_COMMANDS_LITERAL } from './commands/logic'
 import { UpdateCommand, UPDATE_COMMANDS_LITERAL } from './commands/update'
 import { isArray, isObject, isString } from './utils/type'
@@ -34,11 +34,11 @@ export const Command = {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.GTE, [val])
   },
 
-  in(val: any) {
+  in(val: any[]) {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.IN, val)
   },
 
-  nin(val: any) {
+  nin(val: any[]) {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.NIN, val)
   },
 
@@ -62,15 +62,15 @@ export const Command = {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.MOD, [val])
   },
 
-  geoNear(val: any) {
+  geoNear(val: IGeoNearOptions) {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.GEO_NEAR, [val])
   },
 
-  geoWithin(val: any) {
+  geoWithin(val: IGeoWithinOptions) {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.GEO_WITHIN, [val])
   },
 
-  geoIntersects(val: any) {
+  geoIntersects(val: IGeoIntersectsOptions) {
     return new QueryCommand(QUERY_COMMANDS_LITERAL.GEO_INTERSECTS, [val])
   },
 

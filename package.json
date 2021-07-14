@@ -1,10 +1,9 @@
 {
   "name": "less-api-database",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Database interface for cloud development",
   "main": "dist/commonjs/index.js",
   "module": "dist/esm/index.js",
-  "types": "types/index.d.ts",
   "scripts": {
     "test": "mocha tests/*test.js",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json",

@@ -1,4 +1,4 @@
-import { QueryCommand } from './commands/query';
+import { IGeoIntersectsOptions, IGeoNearOptions, IGeoWithinOptions, QueryCommand } from './commands/query';
 import { LogicCommand } from './commands/logic';
 import { UpdateCommand } from './commands/update';
 import Aggregation from './aggregate';
@@ -10,16 +10,16 @@ export declare const Command: {
     lte(val: any): QueryCommand;
     gt(val: any): QueryCommand;
     gte(val: any): QueryCommand;
-    in(val: any): QueryCommand;
-    nin(val: any): QueryCommand;
+    in(val: any[]): QueryCommand;
+    nin(val: any[]): QueryCommand;
     all(val: any): QueryCommand;
     elemMatch(val: any): QueryCommand;
     exists(val: boolean): QueryCommand;
     size(val: number): QueryCommand;
     mod(val: number[]): QueryCommand;
-    geoNear(val: any): QueryCommand;
-    geoWithin(val: any): QueryCommand;
-    geoIntersects(val: any): QueryCommand;
+    geoNear(val: IGeoNearOptions): QueryCommand;
+    geoWithin(val: IGeoWithinOptions): QueryCommand;
+    geoIntersects(val: IGeoIntersectsOptions): QueryCommand;
     like(val: string): QueryCommand;
     and(...__expressions__: import("./serializer/datatype").IQueryCondition[]): LogicCommand;
     nor(...__expressions__: import("./serializer/datatype").IQueryCondition[]): LogicCommand;

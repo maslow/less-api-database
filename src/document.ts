@@ -296,7 +296,7 @@ export class DocumentReference {
   /**
    * 返回选中的文档
    */
-  get<T>(callback?: any): Promise<GetRes<T>> {
+  get<T = any>(callback?: any): Promise<GetRes<T>> {
     callback = callback || createPromiseCallback()
 
     const query = { [this.primaryKey]: this.id }

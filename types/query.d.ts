@@ -27,13 +27,13 @@ export declare class Query {
     limit(limit: number): Query;
     skip(offset: number): Query;
     clone(): Query;
-    get<T>(options?: {
+    get<T = any>(options?: {
         nested?: boolean;
     }, callback?: any): Promise<GetRes<T> & ErrorRes>;
     getOne(options?: {
         nested?: boolean;
     }): Promise<GetOneRes & ErrorRes>;
-    merge<T>(options?: {
+    merge<T = any>(options?: {
         nested?: boolean;
         intersection?: boolean;
     }): Promise<GetRes<T> & ErrorRes>;

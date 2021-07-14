@@ -40,11 +40,30 @@ interface JoinParam {
 }
 
 interface WithParam {
-  query: Query,           // 子查询
-  localField: string,     // 主表联接键（关联字段）
-  foreignField: string,   // 子表联接键（外键）
-  as?: string,      // 结果集字段重命名，缺省则用子表名
-  one?: boolean,    // 是否是一对一查询，只在 Query.withOne() 中使用
+  /**
+   * 子查询
+   */
+  query: Query
+
+  /**
+   * 主表联接键（关联字段）
+   */       
+  localField: string
+
+  /**
+   * 子表联接键（外键）
+   */
+  foreignField: string,
+
+  /**
+   * 结果集字段重命名，缺省则用子表名
+   */
+  as?: string,
+  
+  /**
+   * 是否是一对一查询，只在 Query.withOne() 中使用
+   */
+  one?: boolean,
 }
 
 
@@ -284,7 +303,7 @@ export class Query {
       foreignField: param.foreignField,
       localField: param.localField,
       as: param.as ?? param.query._coll,
-      one: false
+      one: param.one ?? false
     }
 
     const combinedWiths = this._withs.concat(newWith)
@@ -382,7 +401,7 @@ export class Query {
    * - 默认获取集合下全部文档数据
    * - 可以把通过 `orderBy`、`where`、`skip`、`limit`设置的数据添加请求参数上
    */
-  public get<T>(options?: { nested?: boolean }, callback?: any): Promise<GetRes<T> & ErrorRes> {
+  public get<T = any>(options?: { nested?: boolean }, callback?: any): Promise<GetRes<T> & ErrorRes> {
     /* eslint-disable no-param-reassign */
     callback = callback || createPromiseCallback()
 
@@ -489,7 +508,7 @@ export class Query {
    * 3. 合并主表 & 子表的结果，即聚合
    * 4. intersection 可指定是否取两个结果集的交集，缺省则以主表结果为主
    */
-  public async merge<T>(options?: { nested?: boolean, intersection?: boolean }): Promise<GetRes<T> & ErrorRes> {
+  public async merge<T = any>(options?: { nested?: boolean, intersection?: boolean }): Promise<GetRes<T> & ErrorRes> {
 
     options = options ?? {} as any
     const intersection = options.intersection ?? false
@@ -507,11 +526,6 @@ export class Query {
 
       // 处理子查询
       let q = query.clone()
-
-      // for withOne()
-      if (one) {
-        q = q.limit(1)
-      }
 
       if (!q._fieldFilters) {
         q._fieldFilters = {}
@@ -531,8 +545,9 @@ export class Query {
       }
 
 
-      // 按照 from -> to 的连接关系将子查询结果聚合
-      // 构建 { [value of `to`]: [subQueryData] } 映射表
+      // 按照 localField -> foreignField 的连接关系将子查询结果聚合：
+
+      // 1. 构建 { [value of `foreignField`]: [subQueryData] } 映射表
       const _map = {}
       for (let sub of r_sub.data) {
         const key = sub[foreignField]           // 将子表结果的连接键的值做为映射表的 key
@@ -544,10 +559,10 @@ export class Query {
         }
       }
 
-      // 将聚合结果合并入主表结果集中
+      // 2. 将聚合结果合并入主表结果集中
       const results = []
       for (let m of res.data) {
-        // 此处主表结果中的 [value of `from`] 与 上面子表结果中的 [value of `to`] 应该是一致的
+        // 此处主表结果中的 [value of `localField`] 与 上面子表结果中的 [value of `foreignField`] 应该是一致的
         const key = m[localField]
         m[as] = _map[key]
 

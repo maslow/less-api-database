@@ -1,4 +1,3 @@
-import { Point } from './geo/point'
 import * as Geo from './geo/index'
 import { CollectionReference } from './collection'
 import { Command } from './command'
@@ -9,7 +8,12 @@ import { RegExpConstructor } from './regexp/index'
  * 地理位置类型
 */
 interface GeoType {
-  Point: typeof Point
+  Point: typeof Geo.Point
+  LineString: typeof Geo.LineString
+  Polygon: typeof Geo.Polygon
+  MultiPoint: typeof Geo.MultiPoint
+  MultiLineString: typeof Geo.MultiLineString
+  MultiPolygon: typeof Geo.MultiPolygon
 }
 
 export { Query } from './query'
