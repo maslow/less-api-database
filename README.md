@@ -1,4 +1,6 @@
 
+> Deprecated: 此仓库已弃用，本项目代码已并入 [`less-api`](https://github.com/Maslow/less-api)
+
 # 安装
 
 ```sh
