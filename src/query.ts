@@ -461,9 +461,9 @@ export class Query {
             requestId: res.requestId,
             ok: true
           }
-          if (res.TotalCount) result.total = res.TotalCount
-          if (res.Limit) result.limit = res.Limit
-          if (res.Offset) result.offset = res.Offset
+          if (res.total) result.total = res.total
+          if (res.limit) result.limit = res.limit
+          if (res.offset) result.offset = res.offset
           callback(0, result)
         }
       })
