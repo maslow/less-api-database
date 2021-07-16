@@ -1,9 +1,10 @@
+import { Db } from './index';
 export default class Aggregation {
-    _db: any;
+    _db: Db;
     _request: any;
     _stages: any[];
     _collectionName: string;
-    constructor(db?: any, collectionName?: any);
+    constructor(db?: Db, collectionName?: string);
     end(): Promise<any>;
     unwrap(): any[];
     done(): {

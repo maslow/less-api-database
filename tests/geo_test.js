@@ -6,7 +6,6 @@ Db.reqClass = function (config) {
   this.config = config
   this.send = async (action, params) => {
     console.log(action, params)
-    console.log(params.query.pos)
     return {
       code: 0,
       data: {
@@ -23,7 +22,7 @@ const db = new Db({
 })
 
 
-describe('Db geo', async () => {
+describe('Db', async () => {
 
 
   it('geo should be ok', async () => {
@@ -38,5 +37,17 @@ describe('Db geo', async () => {
         })
       })
       .get()
+  })
+
+  it('aggregate', async () => {
+    const $ = db.command.aggregate
+    const r = await db.collection('users').aggregate()
+      .group({
+        _id: '$username',
+        total: $.sum('$age')
+      })
+      .end()
+    
+    console.log(r)
   })
 })

@@ -1,12 +1,12 @@
 import { Db } from './index'
-import { EJSON } from 'bson'
+// import { EJSON } from 'bson'
 import { QuerySerializer } from './serializer/query'
 export default class Aggregation {
-  _db: any
+  _db: Db
   _request: any
   _stages: any[]
   _collectionName: string
-  constructor(db?, collectionName?) {
+  constructor(db?: Db, collectionName?: string) {
     this._stages = []
 
     if (db && collectionName) {
@@ -27,7 +27,8 @@ export default class Aggregation {
     if (result && result.data && result.data.list) {
       return {
         requestId: result.requestId,
-        data: JSON.parse(result.data.list).map(EJSON.parse)
+        // data: JSON.parse(result.data.list).map(EJSON.parse)
+        data: result.data.list
       }
     }
     return result

@@ -26,6 +26,6 @@ export declare class DocumentReference {
         deleted: number;
         requestId: string;
     }>;
-    get<T>(callback?: any): Promise<GetRes<T>>;
+    get<T = any>(callback?: any): Promise<GetRes<T>>;
     field(projection: Object): DocumentReference;
 }
